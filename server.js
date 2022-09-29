@@ -74,7 +74,9 @@ const init = () => {
 }
 
 const viewEmployees = () => {
-    db.query('SELECT * FROM employee', function (err, res) {
+    db.query(
+        'SELECT employee.id AS id, employee.first_name AS first_name, employee.last_name AS last_name, role.title AS title, department.name AS department, role.salary AS salary, employee.manager_id AS manager FROM employee JOIN role ON employee.role_id = role_id JOIN department ON role.department_id = department.id JOIN employee manager ON employee.manager_id = employee.id',
+        (err, res) => {
         if(err) {
             throw err
         }
@@ -88,11 +90,41 @@ const addEmployee = () => {
 }
 
 const updateRole = () => {
-    
+    inquirer.prompt([
+        {
+            type: "input",
+            name: "updateRole",
+            message: "What is the name of the role?",
+        },
+        {
+            type: "input",
+            name: "addSalary",
+            message: "What is the salary of the role?",
+        },
+        {
+            type: "list",
+            name: "deptList",
+            message: "Which department does the role belong to?",
+            choices: department
+        }
+
+    ])
+    .then((response) => {
+        db.query('INSERT INTO department (name) VALUES (?)', response.deptName, (err, res) => {
+            if (err) {
+                throw err
+            }
+        init();
+        }
+      )}
+    )
 }
 
 const viewRoles = () => {
-    db.query('SELECT * FROM role', function (err, res) {
+    db.query(
+        'SELECT role.id AS id, role.title AS title, department.name AS department, role.salary AS salary FROM role JOIN department ON role.department_id = department.id', 
+        
+        (err, res) => {
         if(err) {
             throw err
         }
@@ -102,11 +134,38 @@ const viewRoles = () => {
 }
 
 const addRole = () => {
-    
+    inquirer.prompt([
+        {
+            type: "input",
+            name: "addRole",
+            message: "What is the name of the role?",
+        },
+        {
+            type: "input",
+            name: "addSalary",
+            message: "What is the salary of the role?",
+        },
+        {
+            type: "list",
+            name: "deptList",
+            message: "Which department does the role belong to?",
+            choices: department
+        }
+
+    ])
+    .then((response) => {
+        db.query('INSERT INTO department (name) VALUES (?)', response.deptName, (err, res) => {
+            if (err) {
+                throw err
+            }
+        init();
+        }
+      )}
+    )
 }
 
 const viewDepartment = () => {
-    db.query('SELECT * FROM department', function (err, res) {
+    db.query('SELECT * FROM department', (err, res) => {
         if(err) {
             throw err
         }
@@ -116,5 +175,21 @@ const viewDepartment = () => {
 }
 
 const addDepartment = () => {
-    
+    inquirer.prompt([
+        {
+            type: "input",
+            name: "deptName",
+            message: "What is the name of the department?",
+        }
+    ])
+    .then((response) => {
+        db.query('INSERT INTO department (name) VALUES (?)', response.deptName, (err, res) => {
+            if (err) {
+                throw err
+            }
+            console.log(`Added ${response.deptName} to the database`)
+        init();
+        }
+      )}
+    )
 }
