@@ -1,7 +1,7 @@
-//
+//import required packages
 const inquirer = require('inquirer');
 const mysql = require('mysql2');
-const consoleTable = require('console.table');
+const cTable = require('console.table');
 
 //connect to database
 const db = mysql.createConnection(
@@ -16,12 +16,14 @@ const db = mysql.createConnection(
     console.log(`Connected to the employee_db database.`)
 );
 
+//if error connected to database
 db.connect(err => {
     if(err) throw err;
     console.log('Welcome!!')
     init();
 });
 
+//initialize the selection prompt
 const init = () => {
     inquirer.prompt ([
         {
@@ -69,4 +71,50 @@ const init = () => {
 
         }
     })
+}
+
+const viewEmployees = () => {
+    db.query('SELECT * FROM employee', function (err, res) {
+        if(err) {
+            throw err
+        }
+    console.table(res);
+    init();
+    })
+}
+
+const addEmployee = () => {
+    
+}
+
+const updateRole = () => {
+    
+}
+
+const viewRoles = () => {
+    db.query('SELECT * FROM role', function (err, res) {
+        if(err) {
+            throw err
+        }
+    console.table(res);
+    init();
+    }) 
+}
+
+const addRole = () => {
+    
+}
+
+const viewDepartment = () => {
+    db.query('SELECT * FROM department', function (err, res) {
+        if(err) {
+            throw err
+        }
+    console.table(res);
+    init();
+    })
+}
+
+const addDepartment = () => {
+    
 }
