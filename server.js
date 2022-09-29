@@ -76,7 +76,7 @@ const init = () => {
 //prompt selections
 const viewEmployees = () => {
     db.query(
-        'SELECT employee.id AS id, employee.first_name AS first_name, employee.last_name AS last_name, role.title AS title, department.name AS department, role.salary AS salary, employee.manager_id AS manager FROM employee JOIN role ON employee.role_id = role_id JOIN department ON role.department_id = department.id JOIN employee manager ON employee.manager_id = employee.id',
+        'SELECT employee.id AS id, employee.first_name AS first_name, employee.last_name AS last_name, role.title AS title, department.name AS department, role.salary AS salary, CONCAT(manager.first_name, " ", manager.last_name) AS manager FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id LEFT JOIN employee AS manager ON employee.manager_id = manager.id ORDER by employee.id',
         (err, res) => {
         if(err) {
             throw err
@@ -131,7 +131,6 @@ const updateRole = () => {
             type: "List",
             name: "updateEmployee",
             message: "Which employee's role do you want to update?",
-            choice: ,
         },
         {
             type: "list",
