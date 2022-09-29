@@ -73,6 +73,7 @@ const init = () => {
     })
 }
 
+//prompt selections
 const viewEmployees = () => {
     db.query(
         'SELECT employee.id AS id, employee.first_name AS first_name, employee.last_name AS last_name, role.title AS title, department.name AS department, role.salary AS salary, employee.manager_id AS manager FROM employee JOIN role ON employee.role_id = role_id JOIN department ON role.department_id = department.id JOIN employee manager ON employee.manager_id = employee.id',
@@ -86,26 +87,56 @@ const viewEmployees = () => {
 }
 
 const addEmployee = () => {
-    
+    inquirer.prompt([
+        {
+            type: "input",
+            name: "addFirstName",
+            message: "What is the employee's first name?",
+        },
+        {
+            type: "input",
+            name: "addLastName",
+            message: "What is the employee's last name?",
+        },
+        {
+            type: "list",
+            name: "roleList",
+            message: "What is the employee's role?",
+            choices: department
+        },
+        {
+            type: "list",
+            name: "managerList",
+            message: "Who is the employee's manager?",
+            choices: department
+        },
+
+
+    ])
+    .then((response) => {
+        db.query('INSERT INTO department (name) VALUES (?)', response.deptName, (err, res) => {
+            if (err) {
+                throw err
+            }
+            console.log(`Added ${response.addFirstName} ${response.addLastName} to the database`)
+        init();
+        }
+      )}
+    ) 
 }
 
 const updateRole = () => {
     inquirer.prompt([
         {
-            type: "input",
-            name: "updateRole",
-            message: "What is the name of the role?",
-        },
-        {
-            type: "input",
-            name: "addSalary",
-            message: "What is the salary of the role?",
+            type: "List",
+            name: "updateEmployee",
+            message: "Which employee's role do you want to update?",
+            choice: ,
         },
         {
             type: "list",
-            name: "deptList",
-            message: "Which department does the role belong to?",
-            choices: department
+            name: "updateRole",
+            message: "Which role do you want to assign the selected employee?",
         }
 
     ])
@@ -114,6 +145,7 @@ const updateRole = () => {
             if (err) {
                 throw err
             }
+            console.log(`Updated employee's role`)
         init();
         }
       )}
@@ -154,10 +186,11 @@ const addRole = () => {
 
     ])
     .then((response) => {
-        db.query('INSERT INTO department (name) VALUES (?)', response.deptName, (err, res) => {
+        db.query('INSERT INTO role (title, salary, department) VALUES (?)', response.addRole, (err, res) => {
             if (err) {
                 throw err
             }
+            console.log(`Added ${response.addRole} to the database`)
         init();
         }
       )}
