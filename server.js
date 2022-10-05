@@ -182,12 +182,12 @@ const addRole = () => {
         inquirer.prompt([
             {
                 type: "input",
-                name: "addRole",
+                name: "title",
                 message: "What is the name of the role?",
             },
             {
                 type: "input",
-                name: "addSalary",
+                name: "salary",
                 message: "What is the salary of the role?",
             },
             {
@@ -196,10 +196,25 @@ const addRole = () => {
                 message: "Which department does the role belong to?",
                 choices: deptOptions
             },
-        ]).then ((response) => {db.query('INSERT INTO role (title, salary, department_id) VALUES (?)', { title: response.addRole, salary: response.addSalary, department_id: response.deptList }, (err, res) => {
-            if(err) throw err;
-            console.log(`Added ${response.addRole} to the database`);
-            init();
+        ]).then ((response) => {
+            const deptChoice = response.deptList;
+            console.log(deptChoice)
+            db.query('SELECT * FROM DEPARTMENT', (err,res) => {
+                if(err) throw (err);
+
+            let filterDept = res.filter(res => {
+                return res.name === deptChoice;
+            })
+
+            let deptId = filterDept[0].id;
+            console.log(deptId)
+
+            db.query('INSERT INTO role (title, salary, department_id) VALUES (?)', { title: response.title, salary: response.salary, department_id: deptId }, (err, res) => {
+                if(err) throw err;
+                console.log(`Added ${response.title} to the database`);
+                console.table(res);
+                init();
+            })  
         }
         )}
         );
