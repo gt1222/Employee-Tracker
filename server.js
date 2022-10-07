@@ -77,6 +77,7 @@ const init = () => {
 //prompt selections
 const viewEmployees = () => {
     db.query(
+        //should've made queries in a separate file, but prob do that some other time
         'SELECT employee.id AS id, employee.first_name AS first_name, employee.last_name AS last_name, role.title AS title, department.name AS department, role.salary AS salary, CONCAT(manager.first_name, " ", manager.last_name) AS manager FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id LEFT JOIN employee AS manager ON employee.manager_id = manager.id ORDER by employee.id',
         (err, res) => {
             if (err) throw err;
@@ -86,12 +87,9 @@ const viewEmployees = () => {
 }
 
 const addEmployee = () => {
-    db.query('SELECT employee.id AS id, employee.first_name AS first_name, employee.last_name AS last_name, role.title AS title, department.name AS department, role.salary AS salary, CONCAT(manager.first_name, " ", manager.last_name) AS manager FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id LEFT JOIN employee AS manager ON employee.manager_id = manager.id ORDER by employee.id', (err, res) => {
-        if (err) throw (err);
+    db.query('SELECT role.id, role.title FROM role', (err, res) =>{
+        if(err) throw(err);
         const roleOptions = res.map((res) => res.title);
-        console.log(roleOptions)
-        const managerOptions = res.map((res) => res.manager)
-        console.log(managerOptions)
 
         inquirer.prompt([
             {
@@ -110,40 +108,60 @@ const addEmployee = () => {
                 message: "What is the employee's role?",
                 choices: roleOptions
             },
-            {
-                type: "list",
-                name: "managerList",
-                message: "Who is the employee's manager?",
-                choices: managerOptions
-            },
         ]).then((response) => {
             const roleChoice = response.roleList;
 
-            const managerChoice = response.managerList;
-
-            db.query('SELECT employee.id AS id, employee.first_name AS first_name, employee.last_name AS last_name, role.title AS title, department.name AS department, role.salary AS salary, CONCAT(manager.first_name, " ", manager.last_name) AS manager FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id LEFT JOIN employee AS manager ON employee.manager_id = manager.id ORDER by employee.id', (err, res) => {
-                if (err) throw (err)
+            db.query('SELECT role.id, role.title FROM role', (err,res) => {
+                if(err) throw(err);
 
                 let filterRole = res.filter(res => {
                     return res.title === roleChoice
-                });
-
-                let filterManager = res.filter(res => {
-                    return res.manager === managerChoice
                 })
-                //needs to get the id's because this is the key to connect all the tables and values
+
                 let roleID = filterRole[0].id;
 
-                let managerID = filterManager[0].id;
+                db.query('SELECT employee.id, CONCAT(employee.first_name, " ", employee.last_name) AS manager FROM employee', (err, res) => {
+                    if(err) throw (err);
+    
+                    const managerOptions = res.map((res) => res.manager);
+                    managerOptions.unshift('None');
 
-                db.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ("${response.addFirstName}", "${response.addLastName}", ${roleID}, ${managerID})`, (err, res) => {
-                    if (err) throw err;
+                    inquirer.prompt([
+                        {
+                            type: "list",
+                            name: "managerList",
+                            message: "Who is the employee's manager?",
+                            choices: managerOptions
+                        },
+                    ]).then((managerResponse) => {
+                        const managerChoice = managerResponse.managerList; 
+                        
+                        db.query('SELECT employee.id, CONCAT(employee.first_name, " ", employee.last_name) AS manager FROM employee', (err, res) => {
+                            if(err) throw (err);
 
-                    console.log(`Added ${response.addFirstName} ${response.addLastName} to the database`);
+                            let filterManager = res.filter(res => {
+                                return res.manager === managerChoice
+                                
+                            })
 
-                    init();
-                }
-                )
+                            let managerID;
+
+                            if (managerChoice === 'None') {
+                                managerID = null;   
+                            }else {
+                                managerID = filterManager[0].id;
+                            }
+
+                            db.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ("${response.addFirstName}", "${response.addLastName}", ${roleID}, ${managerID})`, (err, res) => {
+                                if(err) throw (err);
+
+                                console.log(`Added ${response.addFirstName} ${response.addLastName} to the database`);
+
+                                init();
+                            })
+                        })
+                    })
+                })
             })
         })
     })
@@ -166,78 +184,55 @@ const updateRole = () => {
             const updateEChoice = response.updateEmployee;
 
             db.query('SELECT employee.id, CONCAT(employee.first_name, " ", employee.last_name) AS name FROM employee', (err, res) => {
-                    if (err) throw (err);
-    
-                    let filterEChoice = res.filter(res => {
-                        return res.name === updateEChoice
-                    })
-
-                    let employeeID = filterEChoice[0].id;
-
-            db.query('SELECT * FROM role', (err, res) => {
                 if (err) throw (err);
-            const roleList = res.map((res) => res.title)
-            console.log(roleList);
 
-            inquirer.prompt([
-                {
-                    type: "list",
-                    name: "updateRole",
-                    message: "Which role do you want to assign the selected employee?",
-                    choices: roleList
-                }
-            ]).then((roleResponse) => {
-                const updateRoleChoice = roleResponse.updateRole;
+                let filterEChoice = res.filter(res => {
+                    return res.name === updateEChoice
+                })
+
+                let employeeID = filterEChoice[0].id;
 
                 db.query('SELECT * FROM role', (err, res) => {
                     if (err) throw (err);
-                    let filterRoleChoice = res.filter(res => {
-                        return res.title === updateRoleChoice
+                    const roleList = res.map((res) => res.title)
+                    console.log(roleList);
+
+                    inquirer.prompt([
+                        {
+                            type: "list",
+                            name: "updateRole",
+                            message: "Which role do you want to assign the selected employee?",
+                            choices: roleList
+                        }
+                    ]).then((roleResponse) => {
+                        const updateRoleChoice = roleResponse.updateRole;
+
+                        db.query('SELECT * FROM role', (err, res) => {
+                            if (err) throw (err);
+                            let filterRoleChoice = res.filter(res => {
+                                return res.title === updateRoleChoice
+                            })
+
+                            let roleID = filterRoleChoice[0].id;
+
+                            db.query(`UPDATE employee SET role_id = ${roleID} WHERE id = ${employeeID}`, (err, res) => {
+                                if (err) throw err;
+
+                                console.log(`Updated employee's role`);
+
+                                init();
+                            })
+                        }
+                        )
                     })
-
-                    let roleID = filterRoleChoice[0].id;
-
-                    db.query(`UPDATE employee SET role_id = ${roleID} WHERE id = ${employeeID}`, (err, res) => {
-                        if (err) throw err;
-    
-                        console.log(`Updated employee's role`);
-    
-                        init();
-            })
-
-            
-
-
-            // db.query('SELECT employee.id, CONCAT(employee.first_name, " ", employee.last_name) AS name, role.id, role.title AS title FROM employee LEFT JOIN role ON employee.role_id = role.id', (err, res) => {
-            //     if (err) throw (err);
-
-            //     let filterEChoice = res.filter(res => {
-            //         return res.name === updateEChoice
-            //     })
-
-            //     let filterRoleChoice = res.filter(res => {
-            //         return res.title === updateRoleChoice
-            //     })
-
-            //     let employeeID = filterEChoice[0].id;
-
-            //     let roleID = filterRoleChoice[0].id;
-
-            //     db.query(`UPDATE employee SET (role_id = ${roleID}) WHERE (id = ${employeeID})`, (err, res) => {
-            //         if (err) throw err;
-
-            //         console.log(`Updated employee's role`);
-
-            //         init();
-                }
-                )
-            })
-        })
+                })
+            }
+            )
+        }
+        )
     }
     )
 }
-)}
-    )}
 
 const viewRoles = () => {
     db.query(
