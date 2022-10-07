@@ -146,6 +146,7 @@ const addEmployee = () => {
 
                             let managerID;
 
+                            //took forever but needed none to be null but wasn't sure where to out the block of code
                             if (managerChoice === 'None') {
                                 managerID = null;   
                             }else {
@@ -171,7 +172,7 @@ const updateRole = () => {
     db.query('SELECT employee.id, CONCAT(employee.first_name, " ", employee.last_name) AS name FROM employee', (err, res) => {
         if (err) throw (err);
         const employeeList = res.map((res) => res.name)
-        console.log(employeeList);
+        // console.log(employeeList);
 
         inquirer.prompt([
             {
@@ -195,7 +196,7 @@ const updateRole = () => {
                 db.query('SELECT * FROM role', (err, res) => {
                     if (err) throw (err);
                     const roleList = res.map((res) => res.title)
-                    console.log(roleList);
+                    // console.log(roleList);
 
                     inquirer.prompt([
                         {
